@@ -115,7 +115,7 @@
       // Create container for this organism
       const container = document.createElement('div');
       container.innerHTML = `
-        <h2>${organism.name} genome submissions (monthly, 2024‑01 – 2025‑06)</h2>
+        <h2>${organism.name} genome submissions (monthly, 2024‑08 – 2025‑06)</h2>
         <div class="chart" id="${chartId}"></div>
       `;
 
@@ -125,8 +125,8 @@
       d3.tsv(url).then(rows => {
 
         const months = d3.timeMonth
-          .range(PERIOD_START, d3.timeMonth.offset(PERIOD_END, 1))   // 2024-01 … 2025-06 inclusive
-          .map(d => d.toISOString().slice(0, 7));                    // ["YYYY-MM", …]
+          .range(PERIOD_START, d3.timeMonth.offset(PERIOD_END, 1))
+          .map(d => d.toISOString().slice(0, 7));
 
         const counts = Object.fromEntries(
           months.map(m => [m, { insdc: 0, pathoplexus: 0 }])
