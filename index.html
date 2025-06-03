@@ -108,7 +108,7 @@
      * Create a chart for a single organism
      */
     function createOrganismChart(organism, index) {
-      const url = `https://lapis.pathoplexus.org/${organism.endpoint}/sample/details?downloadAsFile=true&downloadFileBasename=${organism.endpoint}_metadata_2025-06-03T1709&dataUseTerms=OPEN&dataFormat=tsv&fields=accessionVersion%2CearliestReleaseDate%2CgroupId&versionStatus=LATEST_VERSION&isRevocation=false`;
+      const url = `https://lapis.pathoplexus.org/${organism.endpoint}/sample/details?dataFormat=tsv&fields=accessionVersion%2CearliestReleaseDate%2CgroupId&versionStatus=LATEST_VERSION&isRevocation=false`;
 
       const chartId = `chart-${index}`;
 
