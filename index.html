@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Pathoplexus Organism Submissions (2024‑08 – 2025‑06)</title>
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <style>
     body {
@@ -136,12 +136,12 @@
         rows.forEach(r => {
           const d = new Date(r.earliestReleaseDate);
           if (isNaN(d) || d < PERIOD_START || d > PERIOD_END) return;
-          const ym     = d.toISOString().slice(0, 7);            // YYYY-MM
+          const ym = d.toISOString().slice(0, 7);            // YYYY-MM
           const bucket = (+r.groupId === 1 ? "insdc" : "pathoplexus");
           if (counts[ym]) counts[ym][bucket] += 1;
         });
 
-        const insdc       = months.map(m => counts[m].insdc);
+        const insdc = months.map(m => counts[m].insdc);
         const pathoplexus = months.map(m => counts[m].pathoplexus);
 
         const traces = [
