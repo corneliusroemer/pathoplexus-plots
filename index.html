@@ -1,475 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pathogen Sequence Data Dashboard (2024-08 to 2025-06)</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        margin: 0;
+        padding: 1rem;
+        background: #f9f9f9;
+        color: #111;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pathogen Sequence Data Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      margin: 0;
-      padding: 1rem;
-      background: #f9f9f9;
-      color: #111;
-    }
+      h1 {
+        text-align: center;
+        margin: 0 0 2rem 0;
+        font-weight: 600;
+        font-size: 2rem;
+        color: #333;
+      }
 
-    h1 {
-      text-align: center;
-      margin: 0 0 2rem 0;
-      font-weight: 600;
-      font-size: 2rem;
-      color: #333;
-    }
+      .pathogen-section {
+        margin-bottom: 3rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 3rem;
+      }
 
-    .pathogen-section {
-      margin-bottom: 3rem;
-      padding: 1.5rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-      margin-bottom: 3rem;
-    }
+      .pathogen-title {
+        text-align: center;
+        margin: 0 0 1rem 0;
+        font-weight: 600;
+        font-size: 1.5rem;
+        color: #555;
+      }
 
-    .pathogen-title {
-      text-align: center;
-      margin: 0 0 1rem 0;
-      font-weight: 600;
-      font-size: 1.5rem;
-      color: #555;
-    }
+      .data-attribution {
+        text-align: center;
+        margin: 0 0 1.5rem 0;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.4;
+      }
 
-    .data-attribution {
-      text-align: center;
-      margin: 0 0 1.5rem 0;
-      padding: 0.75rem;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border-left: 4px solid #007bff;
-      font-size: 0.9rem;
-      color: #666;
-      line-height: 1.4;
-    }
+      .data-attribution a {
+        color: #007bff;
+        text-decoration: none;
+      }
 
-    .data-attribution a {
-      color: #007bff;
-      text-decoration: none;
-    }
+      .data-attribution a:hover {
+        text-decoration: underline;
+      }
 
-    .data-attribution a:hover {
-      text-decoration: underline;
-    }
-
-    .chart-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .chart {
-      background: #fff;
-      border-radius: 6px;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .chart.half-width {
-      min-height: 450px;
-    }
-
-    .chart.full-width {
-      width: 100%;
-      min-height: 500px;
-      grid-column: 1 / -1;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 992px) {
       .chart-container {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .chart {
+        background: #fff;
+        border-radius: 6px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
       .chart.half-width {
-        margin-bottom: 1.5rem;
+        min-height: 450px;
       }
-    }
 
-
-
-  </style>
-</head>
-
-<body>
-  <h1>Pathogen Sequence Data Dashboard</h1>
-  <div id="dashboard-container">
-  </div>
-
-  <script>
-    const pathogens = [
-      { name: "Mpox", endpoint: "mpox", displayName: "Mpox", urlName: "mpox" },
-      { name: "Ebola Zaire", endpoint: "ebola-zaire", displayName: "Ebola Zaire", urlName: "ebola-zaire" },
-      { name: "Ebola Sudan", endpoint: "ebola-sudan", displayName: "Ebola Sudan", urlName: "ebola-sudan" },
-      { name: "West Nile Virus", endpoint: "west-nile", displayName: "West Nile Virus", urlName: "west-nile" },
-      { name: "Crimean-Congo Hemorrhagic Fever Virus", endpoint: "cchf", displayName: "Crimean-Congo Hemorrhagic Fever Virus", urlName: "cchf" },
-      { name: "Human Metapneumovirus", endpoint: "hmpv", displayName: "Human Metapneumovirus", urlName: "hmpv" },
-      { name: "Respiratory Syncytial Virus A", endpoint: "rsv-a", displayName: "Respiratory Syncytial Virus A", urlName: "rsv-a" },
-      { name: "Respiratory Syncytial Virus B", endpoint: "rsv-b", displayName: "Respiratory Syncytial Virus B", urlName: "rsv-b" }
-    ];
-
-    const API_BASE_URL = "https://lapis.pathoplexus.org/";
-    const dashboardContainer = document.getElementById('dashboard-container');
-    function getMonthsSince2024Aug() {
-      const startDate = new Date("2024-08-01T00:00:00Z");
-      const now = new Date();
-      const endDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of current month
-      endDate.setMonth(endDate.getMonth() + 1); // Move to next month
-      endDate.setDate(0); // Go back to last day of current month
-      endDate.setHours(23, 59, 59, 999); // Set to end of day
-      
-      const months = [];
-
-      let currentDate = new Date(startDate);
-      while (currentDate <= endDate) {
-        months.push(currentDate.toISOString().slice(0, 7));
-        currentDate.setMonth(currentDate.getMonth() + 1);
+      .chart.full-width {
+        width: 100%;
+        min-height: 500px;
+        grid-column: 1 / -1;
+        max-width: 1200px;
+        margin: 0 auto;
       }
-      return months;
-    }
 
-    async function createGeoMap(pathogen, parentDiv) {
-      const chartDivId = `geomap-${pathogen.endpoint}`;
-      const chartDiv = document.createElement('div');
-      chartDiv.id = chartDivId;
-      chartDiv.className = 'chart full-width';
-      parentDiv.appendChild(chartDiv);
+      @media (max-width: 992px) {
+        .chart-container {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
 
-      try {
-        const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?fields=geoLocCountry`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
-        const jsonData = await response.json();
+        .chart.half-width {
+          margin-bottom: 1.5rem;
+        }
+      }
+    </style>
+  </head>
 
-        const countryCounts = {};
-        jsonData.data.forEach(entry => {
-          if (entry.geoLocCountry) {
-            countryCounts[entry.geoLocCountry] = (countryCounts[entry.geoLocCountry] || 0) + 1;
-          }
-        }); const mapData = [{
-          type: 'choropleth',
-          locations: Object.keys(countryCounts),
-          z: Object.values(countryCounts),
-          locationmode: 'country names',
-          colorscale: 'Plasma',
-          colorbar: {
-            title: {
-              text: 'Sequence Count',
-              font: { size: 12 }
+  <body>
+    <h1>Pathogen Sequence Data Dashboard (2024-08 to 2025-06)</h1>
+    <div id="dashboard-container"></div>
+
+    <script>
+      const pathogens = [
+        {
+          name: "Mpox",
+          endpoint: "mpox",
+          displayName: "Mpox",
+          urlName: "mpox",
+        },
+        {
+          name: "Ebola Zaire",
+          endpoint: "ebola-zaire",
+          displayName: "Ebola Zaire",
+          urlName: "ebola-zaire",
+        },
+        {
+          name: "Ebola Sudan",
+          endpoint: "ebola-sudan",
+          displayName: "Ebola Sudan",
+          urlName: "ebola-sudan",
+        },
+        {
+          name: "West Nile Virus",
+          endpoint: "west-nile",
+          displayName: "West Nile Virus",
+          urlName: "west-nile",
+        },
+        {
+          name: "Crimean-Congo Hemorrhagic Fever Virus",
+          endpoint: "cchf",
+          displayName: "Crimean-Congo Hemorrhagic Fever Virus",
+          urlName: "cchf",
+        },
+        {
+          name: "Human Metapneumovirus",
+          endpoint: "hmpv",
+          displayName: "Human Metapneumovirus",
+          urlName: "hmpv",
+        },
+        {
+          name: "Respiratory Syncytial Virus A",
+          endpoint: "rsv-a",
+          displayName: "Respiratory Syncytial Virus A",
+          urlName: "rsv-a",
+        },
+        {
+          name: "Respiratory Syncytial Virus B",
+          endpoint: "rsv-b",
+          displayName: "Respiratory Syncytial Virus B",
+          urlName: "rsv-b",
+        },
+      ];
+
+      const API_BASE_URL = "https://lapis.pathoplexus.org/";
+      const dashboardContainer = document.getElementById("dashboard-container");
+      function getMonthsSince2024Aug() {
+        const startDate = new Date("2024-08-01T00:00:00Z");
+        const endDate = new Date("2025-06-30T23:59:59Z");
+        const months = [];
+
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          months.push(currentDate.toISOString().slice(0, 7));
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+        return months;
+      }
+
+      async function createGeoMap(pathogen, parentDiv) {
+        const chartDivId = `geomap-${pathogen.endpoint}`;
+        const chartDiv = document.createElement("div");
+        chartDiv.id = chartDivId;
+        chartDiv.className = "chart full-width";
+        parentDiv.appendChild(chartDiv);
+
+        try {
+          const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?fields=geoLocCountry`;
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error(
+              `HTTP error! status: ${response.status} for ${url}`
+            );
+          const jsonData = await response.json();
+
+          const countryCounts = {};
+          jsonData.data.forEach((entry) => {
+            if (entry.geoLocCountry) {
+              countryCounts[entry.geoLocCountry] =
+                (countryCounts[entry.geoLocCountry] || 0) + 1;
+            }
+          });
+          // const mapData = [
+          //   {
+          //     type: "choropleth",
+          //     locations: Object.keys(countryCounts),
+          //     z: Object.values(countryCounts),
+          //     locationmode: "country names",
+          //     colorscale: "Plasma",
+          //     colorbar: {
+          //       title: {
+          //         text: "Sequence Count",
+          //         font: { size: 12 },
+          //       },
+          //       type: "log",
+          //       thickness: 15,
+          //       len: 0.7,
+          //       tickfont: { size: 10 },
+          //     },
+          //     text: Object.keys(countryCounts).map(
+          //       (country) =>
+          //         `${country}: ${countryCounts[country].toLocaleString()}`
+          //     ),
+          //     hovertemplate: "<b>%{text}</b><br>Sequences: %{z}<extra></extra>",
+          //     zmin: 1,
+          //     zauto: false,
+          //   },
+          // ];
+          const rawVals = Object.values(countryCounts);
+          const logVals = rawVals.map((v) => Math.log10(v || 1)); // log10(1) = 0
+          const logMax = Math.ceil(Math.max(...logVals));
+          const tickvals = Array.from({ length: logMax + 1 }, (_, i) => i); // 0…logMax
+          const ticktext = tickvals.map((v) => (10 ** v).toLocaleString());
+
+          const mapData = [
+            {
+              type: "choropleth",
+              locations: Object.keys(countryCounts),
+              z: logVals,
+              locationmode: "country names",
+              colorscale: "Plasma",
+              colorbar: {
+                title: { text: "Sequence Count", font: { size: 12 } },
+                tickvals,
+                ticktext,
+                thickness: 15,
+                len: 0.7,
+              },
+              text: Object.keys(countryCounts).map(
+                (c) => `${c}: ${countryCounts[c].toLocaleString()}`
+              ),
+              hovertemplate:
+                "<b>%{text}</b><br>Sequences: %{customdata}<extra></extra>",
+              customdata: rawVals, // show raw counts on hover
+              zmin: 0,
+              zmax: logMax,
             },
-            type: 'log',
-            thickness: 15,
-            len: 0.7,
-            tickfont: { size: 10 }
-          },
-          text: Object.keys(countryCounts).map(country => `${country}: ${countryCounts[country].toLocaleString()}`),
-          hovertemplate: '<b>%{text}</b><br>Sequences: %{z}<extra></extra>',
-          zmin: 1,
-          zauto: false
-        }];
+          ];
 
-        const layout = {
-          title: {
-            text: `Geographic Distribution of ${pathogen.displayName} Sequences`,
-            font: { size: 16, color: '#333' },
-            x: 0.5,
-            xanchor: 'center'
-          },
-          geo: {
-            projection: { type: 'natural earth' },
-            showframe: false,
-            showcoastlines: true,
-            coastlinecolor: "RebeccaPurple",
-            showland: true,
-            landcolor: 'rgb(243, 243, 243)',
-            showocean: true,
-            oceancolor: 'rgb(204, 230, 255)'
-          },
-          margin: { t: 60, b: 60, l: 10, r: 10 },
-          annotations: [{
-            text: `Total sequences mapped: ${Object.values(countryCounts).reduce((a, b) => a + b, 0).toLocaleString()}`,
-            showarrow: false,
-            xref: "paper", yref: "paper",
-            x: 0.5, y: -0.08, xanchor: 'center', yanchor: 'top',
-            font: { size: 12, color: '#666' }
-          }]
-        };
-        Plotly.newPlot(chartDivId, mapData, layout, { responsive: true });
-      } catch (error) {
-        console.error(`Error fetching/rendering geo map for ${pathogen.displayName}:`, error);
-        chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load map for ${pathogen.displayName}.</div>`;
+          const layout = {
+            title: {
+              text: `Geographic Distribution of ${pathogen.displayName} Sequences`,
+              font: { size: 16, color: "#333" },
+              x: 0.5,
+              xanchor: "center",
+            },
+            geo: {
+              projection: { type: "natural earth" },
+              showframe: false,
+              showcoastlines: true,
+              coastlinecolor: "RebeccaPurple",
+              showland: true,
+              landcolor: "rgb(243, 243, 243)",
+              showocean: true,
+              oceancolor: "rgb(204, 230, 255)",
+            },
+            margin: { t: 60, b: 60, l: 10, r: 10 },
+            annotations: [
+              {
+                text: `Total sequences mapped: ${Object.values(countryCounts)
+                  .reduce((a, b) => a + b, 0)
+                  .toLocaleString()}`,
+                showarrow: false,
+                xref: "paper",
+                yref: "paper",
+                x: 0.5,
+                y: -0.08,
+                xanchor: "center",
+                yanchor: "top",
+                font: { size: 12, color: "#666" },
+              },
+            ],
+          };
+          Plotly.newPlot(chartDivId, mapData, layout, { responsive: true });
+        } catch (error) {
+          console.error(
+            `Error fetching/rendering geo map for ${pathogen.displayName}:`,
+            error
+          );
+          chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load map for ${pathogen.displayName}.</div>`;
+        }
       }
-    }    async function createMonthlyCountsChart(pathogen, parentDiv) {
-      const chartDivId = `monthlycounts-${pathogen.endpoint}`;
-      const chartDiv = document.createElement('div');
-      chartDiv.id = chartDivId;
-      chartDiv.className = 'chart half-width';
-      parentDiv.appendChild(chartDiv);
+      async function createMonthlyCountsChart(pathogen, parentDiv) {
+        const chartDivId = `monthlycounts-${pathogen.endpoint}`;
+        const chartDiv = document.createElement("div");
+        chartDiv.id = chartDivId;
+        chartDiv.className = "chart half-width";
+        parentDiv.appendChild(chartDiv);
 
-      try {
-        const months = getMonthsSince2024Aug();
+        try {
+          const months = getMonthsSince2024Aug();
 
-        // Single request to get all data with TSV format for efficiency
-        const now = new Date();
-        const currentYearMonth = now.toISOString().slice(0, 7);
-        const endDateStr = `${currentYearMonth}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
-        
-        const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?dataFormat=tsv&fields=earliestReleaseDate%2Csubmitter&versionStatus=LATEST_VERSION&isRevocation=false&earliestReleaseDateFrom=2024-08-01&earliestReleaseDateTo=${endDateStr}`;
+          // Single request to get all data with TSV format for efficiency
+          const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?dataFormat=tsv&fields=earliestReleaseDate%2Csubmitter&versionStatus=LATEST_VERSION&isRevocation=false&earliestReleaseDateFrom=2024-08-01&earliestReleaseDateTo=2025-06-30`;
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
-        const tsvText = await response.text();
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error(
+              `HTTP error! status: ${response.status} for ${url}`
+            );
+          const tsvText = await response.text();
 
-        // Parse TSV data
-        const lines = tsvText.trim().split('\n');
-        const headers = lines[0].split('\t');
-        const dateIndex = headers.indexOf('earliestReleaseDate');
-        const submitterIndex = headers.indexOf('submitter');
+          // Parse TSV data
+          const lines = tsvText.trim().split("\n");
+          const headers = lines[0].split("\t");
+          const dateIndex = headers.indexOf("earliestReleaseDate");
+          const submitterIndex = headers.indexOf("submitter");
 
-        // Initialize counts
-        const monthlyCounts = {};
-        months.forEach(month => {
-          monthlyCounts[month] = { total: 0, insdc: 0, direct: 0 };
-        });
+          // Initialize counts
+          const monthlyCounts = {};
+          months.forEach((month) => {
+            monthlyCounts[month] = { total: 0, insdc: 0, direct: 0 };
+          });
 
-        // Process each row
-        for (let i = 1; i < lines.length; i++) {
-          const row = lines[i].split('\t');
-          const dateStr = row[dateIndex];
-          const submitter = row[submitterIndex];
+          // Process each row
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split("\t");
+            const dateStr = row[dateIndex];
+            const submitter = row[submitterIndex];
 
-          if (dateStr) {
-            const date = new Date(dateStr);
-            const monthKey = date.toISOString().slice(0, 7);
+            if (dateStr) {
+              const date = new Date(dateStr);
+              const monthKey = date.toISOString().slice(0, 7);
 
-            if (monthlyCounts[monthKey]) {
-              monthlyCounts[monthKey].total++;
-              if (submitter === 'insdc_ingest_user') {
-                monthlyCounts[monthKey].insdc++;
-              } else {
-                monthlyCounts[monthKey].direct++;
+              if (monthlyCounts[monthKey]) {
+                monthlyCounts[monthKey].total++;
+                if (submitter === "insdc_ingest_user") {
+                  monthlyCounts[monthKey].insdc++;
+                } else {
+                  monthlyCounts[monthKey].direct++;
+                }
               }
             }
           }
+
+          const totalCountsData = months.map(
+            (month) => monthlyCounts[month].total
+          );
+          const ncbiCountsData = months.map(
+            (month) => monthlyCounts[month].insdc
+          );
+          const directCountsData = months.map(
+            (month) => monthlyCounts[month].direct
+          );
+
+          const traces = [
+            {
+              x: months,
+              y: ncbiCountsData,
+              name: "INSDC",
+              type: "bar",
+              marker: { color: "royalblue" },
+              hovertemplate:
+                "<b>INSDC</b><br>Month: %{x}<br>Sequences: %{y}<extra></extra>",
+            },
+            {
+              x: months,
+              y: directCountsData,
+              name: "Direct",
+              type: "bar",
+              marker: { color: "darkorange" },
+              hovertemplate:
+                "<b>Direct</b><br>Month: %{x}<br>Sequences: %{y}<extra></extra>",
+            },
+          ];
+
+          const totalSequences = totalCountsData.reduce((a, b) => a + b, 0);
+          const layout = {
+            title: {
+              text: `Monthly ${pathogen.displayName} Sequence Submissions<br><sub>Since August 2025</sub>`,
+              font: { size: 16, color: "#333" },
+              x: 0.5,
+              xanchor: "center",
+            },
+            xaxis: {
+              title: { text: "Month", font: { size: 14, color: "#555" } },
+              tickangle: -45,
+              type: "category",
+              showgrid: false,
+            },
+            yaxis: {
+              title: {
+                text: "Number of Sequences",
+                font: { size: 14, color: "#555" },
+              },
+              showgrid: true,
+              gridcolor: "rgba(128,128,128,0.2)",
+            },
+            barmode: "stack",
+            legend: {
+              title: { text: "Data Source", font: { size: 12 } },
+              orientation: "h",
+              x: 0.5,
+              xanchor: "center",
+              y: -0.3,
+            },
+            margin: { t: 80, b: 100, l: 70, r: 20 },
+            plot_bgcolor: "rgba(0,0,0,0)",
+            annotations: [
+              {
+                text: `Total: ${totalSequences.toLocaleString()} sequences`,
+                showarrow: false,
+                xref: "paper",
+                yref: "paper",
+                x: 1,
+                y: 1.02,
+                xanchor: "right",
+                yanchor: "bottom",
+                font: { size: 12, color: "#666" },
+              },
+            ],
+          };
+          Plotly.newPlot(chartDivId, traces, layout, { responsive: true });
+        } catch (error) {
+          console.error(
+            `Error fetching/rendering monthly counts for ${pathogen.displayName}:`,
+            error
+          );
+          chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load monthly counts for ${pathogen.displayName}.</div>`;
         }
-
-        const totalCountsData = months.map(month => monthlyCounts[month].total);
-        const ncbiCountsData = months.map(month => monthlyCounts[month].insdc);
-        const directCountsData = months.map(month => monthlyCounts[month].direct);
-
-        const traces = [
-          {
-            x: months,
-            y: ncbiCountsData,
-            name: "INSDC",
-            type: "bar",
-            marker: { color: "royalblue" },
-            hovertemplate: '<b>INSDC</b><br>Month: %{x}<br>Sequences: %{y}<extra></extra>'
-          },
-          {
-            x: months,
-            y: directCountsData,
-            name: "Direct",
-            type: "bar",
-            marker: { color: "darkorange" },
-            hovertemplate: '<b>Direct</b><br>Month: %{x}<br>Sequences: %{y}<extra></extra>'
-          }
-        ];
-
-        const totalSequences = totalCountsData.reduce((a, b) => a + b, 0);
-        const layout = {
-          title: {
-            text: `Monthly ${pathogen.displayName} Sequence Submissions<br><sub>Since August 2024</sub>`,
-            font: { size: 16, color: '#333' },
-            x: 0.5,
-            xanchor: 'center'
-          },
-          xaxis: {
-            title: { text: "Month", font: { size: 14, color: '#555' } },
-            tickangle: -45,
-            type: "category",
-            showgrid: false
-          },
-          yaxis: {
-            title: { text: "Number of Sequences", font: { size: 14, color: '#555' } },
-            showgrid: true,
-            gridcolor: 'rgba(128,128,128,0.2)'
-          },
-          barmode: 'stack',
-          legend: {
-            title: { text: "Data Source", font: { size: 12 } },
-            orientation: "h",
-            x: 0.5,
-            xanchor: 'center',
-            y: -0.3,
-          },
-          margin: { t: 80, b: 100, l: 70, r: 20 },
-          plot_bgcolor: 'rgba(0,0,0,0)',
-          annotations: [{
-            text: `Total: ${totalSequences.toLocaleString()} sequences`,
-            showarrow: false,
-            xref: "paper", yref: "paper",
-            x: 1, y: 1.02, xanchor: 'right', yanchor: 'bottom',
-            font: { size: 12, color: '#666' }
-          }]
-        };
-        Plotly.newPlot(chartDivId, traces, layout, { responsive: true });
-      } catch (error) {
-        console.error(`Error fetching/rendering monthly counts for ${pathogen.displayName}:`, error);
-        chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load monthly counts for ${pathogen.displayName}.</div>`;
       }
-    }
 
-    async function createSourceTypeSunburst(pathogen, parentDiv) {
-      const chartDivId = `sunburst-${pathogen.endpoint}`;
-      const chartDiv = document.createElement('div');
-      chartDiv.id = chartDivId;
-      chartDiv.className = 'chart half-width';
-      parentDiv.appendChild(chartDiv);
-
-      try {
-        const apiUrlAggregated = `${API_BASE_URL}${pathogen.endpoint}/sample/aggregated`;
-
-        const respTotal = await fetch(apiUrlAggregated);
-        if (!respTotal.ok) throw new Error(`HTTP error! status: ${respTotal.status} for total aggregation`);
-        const dataTotal = await respTotal.json();
-        const totalSeqs = (dataTotal.data && dataTotal.data.length > 0) ? dataTotal.data[0].count : 0;
-
-        const respINSDC = await fetch(`${apiUrlAggregated}?submitter=insdc_ingest_user`);
-        if (!respINSDC.ok) throw new Error(`HTTP error! status: ${respINSDC.status} for INSDC aggregation`);
-        const dataINSDC = await respINSDC.json();
-        const insdcCount = (dataINSDC.data && dataINSDC.data.length > 0) ? dataINSDC.data[0].count : 0;
-
-        const respRestricted = await fetch(`${apiUrlAggregated}?dataUseTerms=RESTRICTED`);
-        if (!respRestricted.ok) throw new Error(`HTTP error! status: ${respRestricted.status} for RESTRICTED aggregation`);
-        const dataRestricted = await respRestricted.json();
-        const totalRestrictedCount = (dataRestricted.data && dataRestricted.data.length > 0) ? dataRestricted.data[0].count : 0;
-
-        const directTotalCount = Math.max(0, totalSeqs - insdcCount);
-
-        const directRestrictedCount = Math.min(totalRestrictedCount, directTotalCount);
-        const directOpenCount = Math.max(0, directTotalCount - directRestrictedCount);
-        const insdcOpenCount = insdcCount;
-        const insdcRestrictedCount = 0;
-
-        const sunburstData = [{
-          type: "sunburst",
-          ids: ["Direct", "INSDC", "Direct-Open", "Direct-Restricted", "INSDC-Open", "INSDC-Restricted"],
-          labels: ["Direct", "INSDC", "Open", "Restricted", "Open", "Restricted"],
-          parents: ["", "", "Direct", "Direct", "INSDC", "INSDC"],
-          values: [
-            directOpenCount + directRestrictedCount, // Value for "Direct" parent
-            insdcOpenCount + insdcRestrictedCount,   // Value for "INSDC" parent
-            directOpenCount,                       // Leaf: Direct-Open
-            directRestrictedCount,                 // Leaf: Direct-Restricted
-            insdcOpenCount,                        // Leaf: INSDC-Open
-            insdcRestrictedCount                   // Leaf: INSDC-Restricted
-          ],
-          leaf: { opacity: 0.8 },
-          branchvalues: 'total',
-          hovertemplate: '<b>%{label}</b><br>Sequences: %{value}<br>Percentage: %{percentParent}<extra></extra>'
-        }];
-
-        const colorMap = { 'Direct': '#ff7f0e', 'INSDC': '#1f77b4', 'Open': '#2ca02c', 'Restricted': '#d62728' };
-        sunburstData[0].marker = {
-          colors: sunburstData[0].ids.map((id, index) => {
-            const label = sunburstData[0].labels[index];
-            const parent = sunburstData[0].parents[index];
-            if (parent === "") { return colorMap[label]; }
-            else { return colorMap[label]; }
-          }),
-          line: { width: 2, color: '#fff' }
-        };
-
-        const layout = {
-          title: {
-            text: `${pathogen.displayName} Data Sources & Access Terms`,
-            font: { size: 16, color: '#333' },
-            x: 0.5,
-            xanchor: 'center'
-          },
-          margin: { l: 20, r: 20, b: 80, t: 80 },
-          annotations: [{
-            text: `Total: ${totalSeqs.toLocaleString()} sequences<br>INSDC: ${((insdcCount / totalSeqs) * 100).toFixed(1)}% | Direct: ${((directTotalCount / totalSeqs) * 100).toFixed(1)}%<br>Restricted: ${((totalRestrictedCount / totalSeqs) * 100).toFixed(1)}%`,
-            showarrow: false,
-            xref: "paper", yref: "paper",
-            x: 0.5, y: -0.05, xanchor: 'center', yanchor: 'top',
-            font: { size: 11, color: '#666' }
-          }]
-        };
-        Plotly.newPlot(chartDivId, sunburstData, layout, { responsive: true });
-
-      } catch (error) {
-        console.error(`Error fetching/rendering source type sunburst for ${pathogen.displayName}:`, error);
-        chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load source types for ${pathogen.displayName}.</div>`;
-      }
-    }
-
-    async function initializeDashboard() {
-      dashboardContainer.innerHTML = '';
-
-      for (const pathogen of pathogens) {
-        const pathogenSection = document.createElement('div');
-        pathogenSection.className = 'pathogen-section';
-        pathogenSection.id = `section-${pathogen.endpoint}`;
-
-        const titleElement = document.createElement('h2');
-        titleElement.className = 'pathogen-title';
-        titleElement.textContent = pathogen.displayName;
-        pathogenSection.appendChild(titleElement);
-
-        // Add data attribution
-        const attributionElement = document.createElement('div');
-        attributionElement.className = 'data-attribution';
-        attributionElement.innerHTML = `All ${pathogen.displayName} data in Pathoplexus is used for these graphs. You can see the data used and their Data Use Terms <a href="https://pathoplexus.org/${pathogen.urlName}/search?" target="_blank" rel="noopener noreferrer">here</a>.`;
-        pathogenSection.appendChild(attributionElement);
-
-        const chartsRowDiv = document.createElement('div');
-        chartsRowDiv.className = 'chart-container';
-        pathogenSection.appendChild(chartsRowDiv);
-
-        dashboardContainer.appendChild(pathogenSection);
-
-        const chartPromises = [
-          createMonthlyCountsChart(pathogen, chartsRowDiv),
-          createSourceTypeSunburst(pathogen, chartsRowDiv),
-          createGeoMap(pathogen, pathogenSection)
-        ];
+      async function createSourceTypeSunburst(pathogen, parentDiv) {
+        const chartDivId = `sunburst-${pathogen.endpoint}`;
+        const chartDiv = document.createElement("div");
+        chartDiv.id = chartDivId;
+        chartDiv.className = "chart half-width";
+        parentDiv.appendChild(chartDiv);
 
         try {
-          await Promise.all(chartPromises);
+          const apiUrlAggregated = `${API_BASE_URL}${pathogen.endpoint}/sample/aggregated`;
+
+          const respTotal = await fetch(apiUrlAggregated);
+          if (!respTotal.ok)
+            throw new Error(
+              `HTTP error! status: ${respTotal.status} for total aggregation`
+            );
+          const dataTotal = await respTotal.json();
+          const totalSeqs =
+            dataTotal.data && dataTotal.data.length > 0
+              ? dataTotal.data[0].count
+              : 0;
+
+          const respINSDC = await fetch(
+            `${apiUrlAggregated}?submitter=insdc_ingest_user`
+          );
+          if (!respINSDC.ok)
+            throw new Error(
+              `HTTP error! status: ${respINSDC.status} for INSDC aggregation`
+            );
+          const dataINSDC = await respINSDC.json();
+          const insdcCount =
+            dataINSDC.data && dataINSDC.data.length > 0
+              ? dataINSDC.data[0].count
+              : 0;
+
+          const respRestricted = await fetch(
+            `${apiUrlAggregated}?dataUseTerms=RESTRICTED`
+          );
+          if (!respRestricted.ok)
+            throw new Error(
+              `HTTP error! status: ${respRestricted.status} for RESTRICTED aggregation`
+            );
+          const dataRestricted = await respRestricted.json();
+          const totalRestrictedCount =
+            dataRestricted.data && dataRestricted.data.length > 0
+              ? dataRestricted.data[0].count
+              : 0;
+
+          const directTotalCount = Math.max(0, totalSeqs - insdcCount);
+
+          const directRestrictedCount = Math.min(
+            totalRestrictedCount,
+            directTotalCount
+          );
+          const directOpenCount = Math.max(
+            0,
+            directTotalCount - directRestrictedCount
+          );
+          const insdcOpenCount = insdcCount;
+          const insdcRestrictedCount = 0;
+
+          const sunburstData = [
+            {
+              type: "sunburst",
+              ids: [
+                "Direct",
+                "INSDC",
+                "Direct-Open",
+                "Direct-Restricted",
+                "INSDC-Open",
+                "INSDC-Restricted",
+              ],
+              labels: [
+                "Direct",
+                "INSDC",
+                "Open",
+                "Restricted",
+                "Open",
+                "Restricted",
+              ],
+              parents: ["", "", "Direct", "Direct", "INSDC", "INSDC"],
+              values: [
+                directOpenCount + directRestrictedCount, // Value for "Direct" parent
+                insdcOpenCount + insdcRestrictedCount, // Value for "INSDC" parent
+                directOpenCount, // Leaf: Direct-Open
+                directRestrictedCount, // Leaf: Direct-Restricted
+                insdcOpenCount, // Leaf: INSDC-Open
+                insdcRestrictedCount, // Leaf: INSDC-Restricted
+              ],
+              leaf: { opacity: 0.8 },
+              branchvalues: "total",
+              hovertemplate:
+                "<b>%{label}</b><br>Sequences: %{value}<br>Percentage: %{percentParent}<extra></extra>",
+            },
+          ];
+
+          const colorMap = {
+            Direct: "#ff7f0e",
+            INSDC: "#1f77b4",
+            Open: "#2ca02c",
+            Restricted: "#d62728",
+          };
+          sunburstData[0].marker = {
+            colors: sunburstData[0].ids.map((id, index) => {
+              const label = sunburstData[0].labels[index];
+              const parent = sunburstData[0].parents[index];
+              if (parent === "") {
+                return colorMap[label];
+              } else {
+                return colorMap[label];
+              }
+            }),
+            line: { width: 2, color: "#fff" },
+          };
+
+          const layout = {
+            title: {
+              text: `${pathogen.displayName} Data Sources & Access Terms`,
+              font: { size: 16, color: "#333" },
+              x: 0.5,
+              xanchor: "center",
+            },
+            margin: { l: 20, r: 20, b: 80, t: 80 },
+            annotations: [
+              {
+                text: `Total: ${totalSeqs.toLocaleString()} sequences<br>INSDC: ${(
+                  (insdcCount / totalSeqs) *
+                  100
+                ).toFixed(1)}% | Direct: ${(
+                  (directTotalCount / totalSeqs) *
+                  100
+                ).toFixed(1)}%<br>Restricted: ${(
+                  (totalRestrictedCount / totalSeqs) *
+                  100
+                ).toFixed(1)}%`,
+                showarrow: false,
+                xref: "paper",
+                yref: "paper",
+                x: 0.5,
+                y: -0.05,
+                xanchor: "center",
+                yanchor: "top",
+                font: { size: 11, color: "#666" },
+              },
+            ],
+          };
+          Plotly.newPlot(chartDivId, sunburstData, layout, {
+            responsive: true,
+          });
         } catch (error) {
-          console.error(`Error loading charts for ${pathogen.displayName}`, error);
-          const errorDiv = document.createElement('div');
-          errorDiv.style.color = 'red';
-          errorDiv.style.textAlign = 'center';
-          errorDiv.style.padding = '2rem';
-          errorDiv.textContent = `Could not load all charts for ${pathogen.displayName}. Check console for details.`;
-          pathogenSection.appendChild(errorDiv);
+          console.error(
+            `Error fetching/rendering source type sunburst for ${pathogen.displayName}:`,
+            error
+          );
+          chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load source types for ${pathogen.displayName}.</div>`;
         }
       }
-    }
 
-    document.addEventListener('DOMContentLoaded', initializeDashboard);
-  </script>
-</body>
+      async function initializeDashboard() {
+        dashboardContainer.innerHTML = "";
 
+        for (const pathogen of pathogens) {
+          const pathogenSection = document.createElement("div");
+          pathogenSection.className = "pathogen-section";
+          pathogenSection.id = `section-${pathogen.endpoint}`;
+
+          const titleElement = document.createElement("h2");
+          titleElement.className = "pathogen-title";
+          titleElement.textContent = pathogen.displayName;
+          pathogenSection.appendChild(titleElement);
+
+          // Add data attribution
+          const attributionElement = document.createElement("div");
+          attributionElement.className = "data-attribution";
+          attributionElement.innerHTML = `All ${pathogen.displayName} data in Pathoplexus is used for these graphs. You can see the data used and their Data Use Terms <a href="https://pathoplexus.org/${pathogen.urlName}/search?" target="_blank" rel="noopener noreferrer">here</a>.`;
+          pathogenSection.appendChild(attributionElement);
+
+          const chartsRowDiv = document.createElement("div");
+          chartsRowDiv.className = "chart-container";
+          pathogenSection.appendChild(chartsRowDiv);
+
+          dashboardContainer.appendChild(pathogenSection);
+
+          const chartPromises = [
+            createMonthlyCountsChart(pathogen, chartsRowDiv),
+            createSourceTypeSunburst(pathogen, chartsRowDiv),
+            createGeoMap(pathogen, pathogenSection),
+          ];
+
+          try {
+            await Promise.all(chartPromises);
+          } catch (error) {
+            console.error(
+              `Error loading charts for ${pathogen.displayName}`,
+              error
+            );
+            const errorDiv = document.createElement("div");
+            errorDiv.style.color = "red";
+            errorDiv.style.textAlign = "center";
+            errorDiv.style.padding = "2rem";
+            errorDiv.textContent = `Could not load all charts for ${pathogen.displayName}. Check console for details.`;
+            pathogenSection.appendChild(errorDiv);
+          }
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", initializeDashboard);
+    </script>
+  </body>
 </html>
