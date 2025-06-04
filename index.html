@@ -186,7 +186,7 @@
         parentDiv.appendChild(chartDiv);
 
         try {
-          const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?fields=geoLocCountry`;
+          const url = `${API_BASE_URL}${pathogen.endpoint}/sample/aggregated?fields=geoLocCountry`;
           const response = await fetch(url);
           if (!response.ok)
             throw new Error(
@@ -197,8 +197,7 @@
           const countryCounts = {};
           jsonData.data.forEach((entry) => {
             if (entry.geoLocCountry) {
-              countryCounts[entry.geoLocCountry] =
-                (countryCounts[entry.geoLocCountry] || 0) + 1;
+              countryCounts[entry.geoLocCountry] = entry.count;
             }
           });
           // const mapData = [
