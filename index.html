@@ -194,10 +194,16 @@
             );
           const jsonData = await response.json();
 
+          // Map old country names to current names
+          const countryNameMapping = {
+            'Zaire': 'Democratic Republic of the Congo'
+          };
+
           const countryCounts = {};
           jsonData.data.forEach((entry) => {
             if (entry.geoLocCountry) {
-              countryCounts[entry.geoLocCountry] = entry.count;
+              const countryName = countryNameMapping[entry.geoLocCountry] || entry.geoLocCountry;
+              countryCounts[countryName] = (countryCounts[countryName] || 0) + entry.count;
             }
           });
           // const mapData = [
