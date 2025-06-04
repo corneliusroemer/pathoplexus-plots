@@ -241,11 +241,17 @@
               locationmode: "country names",
               colorscale: "Plasma",
               colorbar: {
-                title: { text: "Sequence Count", font: { size: 12 } },
+                title: { 
+                  text: "Sequence Count", 
+                  font: { size: 12 },
+                  side: "right"
+                },
                 tickvals,
                 ticktext,
                 thickness: 15,
                 len: 0.7,
+                titleside: "right",
+                title_standoff: 15,
               },
               text: Object.keys(countryCounts).map(
                 (c) => `${c}: ${countryCounts[c].toLocaleString()}`
