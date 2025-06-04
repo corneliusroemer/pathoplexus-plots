@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pathogen Sequence Data Dashboard (2024-08 to 2025-06)</title>
+  <title>Pathogen Sequence Data Dashboard</title>
   <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
   <style>
     body {
@@ -110,7 +110,7 @@
 </head>
 
 <body>
-  <h1>Pathogen Sequence Data Dashboard (2024-08 to 2025-06)</h1>
+  <h1>Pathogen Sequence Data Dashboard</h1>
   <div id="dashboard-container">
   </div>
 
@@ -130,7 +130,12 @@
     const dashboardContainer = document.getElementById('dashboard-container');
     function getMonthsSince2024Aug() {
       const startDate = new Date("2024-08-01T00:00:00Z");
-      const endDate = new Date("2025-06-30T23:59:59Z");
+      const now = new Date();
+      const endDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of current month
+      endDate.setMonth(endDate.getMonth() + 1); // Move to next month
+      endDate.setDate(0); // Go back to last day of current month
+      endDate.setHours(23, 59, 59, 999); // Set to end of day
+      
       const months = [];
 
       let currentDate = new Date(startDate);
@@ -223,7 +228,11 @@
         const months = getMonthsSince2024Aug();
 
         // Single request to get all data with TSV format for efficiency
-        const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?dataFormat=tsv&fields=earliestReleaseDate%2Csubmitter&versionStatus=LATEST_VERSION&isRevocation=false&earliestReleaseDateFrom=2024-08-01&earliestReleaseDateTo=2025-06-30`;
+        const now = new Date();
+        const currentYearMonth = now.toISOString().slice(0, 7);
+        const endDateStr = `${currentYearMonth}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
+        
+        const url = `${API_BASE_URL}${pathogen.endpoint}/sample/details?dataFormat=tsv&fields=earliestReleaseDate%2Csubmitter&versionStatus=LATEST_VERSION&isRevocation=false&earliestReleaseDateFrom=2024-08-01&earliestReleaseDateTo=${endDateStr}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
@@ -288,7 +297,7 @@
         const totalSequences = totalCountsData.reduce((a, b) => a + b, 0);
         const layout = {
           title: {
-            text: `Monthly ${pathogen.displayName} Sequence Submissions<br><sub>Since August 2025</sub>`,
+            text: `Monthly ${pathogen.displayName} Sequence Submissions<br><sub>Since August 2024</sub>`,
             font: { size: 16, color: '#333' },
             x: 0.5,
             xanchor: 'center'
