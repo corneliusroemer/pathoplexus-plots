@@ -34,6 +34,7 @@
         margin-left: auto;
         margin-right: auto;
         margin-bottom: 3rem;
+        overflow: hidden;
       }
 
       .pathogen-title {
@@ -80,6 +81,8 @@
         border-radius: 6px;
         padding: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        box-sizing: border-box;
       }
 
       .chart.half-width {
@@ -90,8 +93,7 @@
         width: 100%;
         min-height: 500px;
         grid-column: 1 / -1;
-        max-width: 1200px;
-        margin: 0 auto;
+        box-sizing: border-box;
       }
 
       @media (max-width: 992px) {
@@ -293,7 +295,7 @@
               showocean: true,
               oceancolor: "rgb(204, 230, 255)",
             },
-            margin: { t: 60, b: 60, l: 10, r: 10 },
+            margin: { t: 60, b: 80, l: 20, r: 30 },
             annotations: [
               {
                 text: `Total sequences: ${totalSequences.toLocaleString()} | Mapped: ${mappedSequences.toLocaleString()} | Unmapped: ${unmappedSequences.toLocaleString()}`,
@@ -308,7 +310,11 @@
               },
             ],
           };
-          Plotly.newPlot(chartDivId, mapData, layout, { responsive: true });
+          Plotly.newPlot(chartDivId, mapData, layout, { 
+            responsive: true,
+            displayModeBar: false,
+            staticPlot: false
+          });
         } catch (error) {
           console.error(
             `Error fetching/rendering geo map for ${pathogen.displayName}:`,
@@ -447,7 +453,10 @@
               },
             ],
           };
-          Plotly.newPlot(chartDivId, traces, layout, { responsive: true });
+          Plotly.newPlot(chartDivId, traces, layout, { 
+            responsive: true,
+            displayModeBar: false
+          });
         } catch (error) {
           console.error(
             `Error fetching/rendering monthly counts for ${pathogen.displayName}:`,
@@ -604,6 +613,7 @@
           };
           Plotly.newPlot(chartDivId, sunburstData, layout, {
             responsive: true,
+            displayModeBar: false
           });
         } catch (error) {
           console.error(
