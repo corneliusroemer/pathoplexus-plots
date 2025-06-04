@@ -108,7 +108,7 @@
   </head>
 
   <body>
-    <h1>Pathogen Sequence Data Dashboard (2024-08 to 2025-06)</h1>
+    <h1>Pathogen Sequence Data Dashboard</h1>
     <div id="dashboard-container"></div>
 
     <script>
@@ -200,12 +200,19 @@
           };
 
           const countryCounts = {};
+          let totalSequences = 0;
+          let mappedSequences = 0;
+          
           jsonData.data.forEach((entry) => {
+            totalSequences += entry.count;
             if (entry.geoLocCountry) {
               const countryName = countryNameMapping[entry.geoLocCountry] || entry.geoLocCountry;
               countryCounts[countryName] = (countryCounts[countryName] || 0) + entry.count;
+              mappedSequences += entry.count;
             }
           });
+          
+          const unmappedSequences = totalSequences - mappedSequences;
           // const mapData = [
           //   {
           //     type: "choropleth",
@@ -289,9 +296,7 @@
             margin: { t: 60, b: 60, l: 10, r: 10 },
             annotations: [
               {
-                text: `Total sequences mapped: ${Object.values(countryCounts)
-                  .reduce((a, b) => a + b, 0)
-                  .toLocaleString()}`,
+                text: `Total sequences: ${totalSequences.toLocaleString()} | Mapped: ${mappedSequences.toLocaleString()} | Unmapped: ${unmappedSequences.toLocaleString()}`,
                 showarrow: false,
                 xref: "paper",
                 yref: "paper",
