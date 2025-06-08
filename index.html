@@ -96,6 +96,53 @@
         box-sizing: border-box;
       }
 
+      .maps-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .map-toggle-container {
+        background: #fff;
+        border-radius: 6px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        box-sizing: border-box;
+        min-height: 450px;
+      }
+
+      .map-toggle-controls {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+      }
+
+      .map-toggle-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #007bff;
+        background: white;
+        color: #007bff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+      }
+
+      .map-toggle-btn.active {
+        background: #007bff;
+        color: white;
+      }
+
+      .map-toggle-btn:hover:not(.active) {
+        background: #f8f9fa;
+      }
+
       @media (max-width: 992px) {
         .chart-container {
           grid-template-columns: 1fr;
@@ -184,7 +231,7 @@
         const chartDivId = `geomap-${pathogen.endpoint}`;
         const chartDiv = document.createElement("div");
         chartDiv.id = chartDivId;
-        chartDiv.className = "chart full-width";
+        chartDiv.className = "map-chart";
         parentDiv.appendChild(chartDiv);
 
         try {
@@ -280,8 +327,8 @@
 
           const layout = {
             title: {
-              text: `Geographic Distribution of ${pathogen.displayName} Sequences`,
-              font: { size: 16, color: "#333" },
+              text: `All Data: ${pathogen.displayName} Sequences`,
+              font: { size: 14, color: "#333" },
               x: 0.5,
               xanchor: "center",
             },
@@ -298,7 +345,7 @@
             margin: { t: 60, b: 80, l: 20, r: 30 },
             annotations: [
               {
-                text: `Total sequences: ${totalSequences.toLocaleString()} | Mapped: ${mappedSequences.toLocaleString()} | Unmapped: ${unmappedSequences.toLocaleString()}`,
+                text: `All: ${totalSequences.toLocaleString()} | Mapped: ${mappedSequences.toLocaleString()} | Unmapped: ${unmappedSequences.toLocaleString()}`,
                 showarrow: false,
                 xref: "paper",
                 yref: "paper",
@@ -306,7 +353,7 @@
                 y: -0.08,
                 xanchor: "center",
                 yanchor: "top",
-                font: { size: 12, color: "#666" },
+                font: { size: 11, color: "#666" },
               },
             ],
           };
@@ -323,6 +370,223 @@
           chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load map for ${pathogen.displayName}.</div>`;
         }
       }
+
+      async function createToggleableMaps(pathogen, parentDiv) {
+        const containerDiv = document.createElement("div");
+        containerDiv.className = "map-toggle-container";
+        parentDiv.appendChild(containerDiv);
+
+        // Create toggle controls
+        const controlsDiv = document.createElement("div");
+        controlsDiv.className = "map-toggle-controls";
+        
+        const allDataBtn = document.createElement("button");
+        allDataBtn.textContent = "All Data";
+        allDataBtn.className = "map-toggle-btn active";
+        allDataBtn.id = `toggle-all-${pathogen.endpoint}`;
+        
+        const directBtn = document.createElement("button");
+        directBtn.textContent = "Direct Submissions";
+        directBtn.className = "map-toggle-btn";
+        directBtn.id = `toggle-direct-${pathogen.endpoint}`;
+
+        controlsDiv.appendChild(allDataBtn);
+        controlsDiv.appendChild(directBtn);
+        containerDiv.appendChild(controlsDiv);
+
+        // Create chart div
+        const chartDivId = `geomap-toggle-${pathogen.endpoint}`;
+        const chartDiv = document.createElement("div");
+        chartDiv.id = chartDivId;
+        chartDiv.style.height = "400px";
+        containerDiv.appendChild(chartDiv);
+
+        try {
+          // Fetch all data
+          const allDataUrl = `${API_BASE_URL}${pathogen.endpoint}/sample/aggregated?fields=geoLocCountry`;
+          const allDataResponse = await fetch(allDataUrl);
+          if (!allDataResponse.ok)
+            throw new Error(
+              `HTTP error! status: ${allDataResponse.status} for ${allDataUrl}`
+            );
+          const allData = await allDataResponse.json();
+
+          // Fetch INSDC data (group 1)
+          const insdcUrl = `${API_BASE_URL}${pathogen.endpoint}/sample/aggregated?fields=geoLocCountry&groupId=1`;
+          const insdcResponse = await fetch(insdcUrl);
+          if (!insdcResponse.ok)
+            throw new Error(
+              `HTTP error! status: ${insdcResponse.status} for ${insdcUrl}`
+            );
+          const insdcData = await insdcResponse.json();
+
+          // Map old country names to current names
+          const countryNameMapping = {
+            'Zaire': 'Democratic Republic of the Congo'
+          };
+
+          // Process all data
+          const allCountryCounts = {};
+          let allTotalSequences = 0;
+          let allMappedSequences = 0;
+          
+          allData.data.forEach((entry) => {
+            allTotalSequences += entry.count;
+            if (entry.geoLocCountry) {
+              const countryName = countryNameMapping[entry.geoLocCountry] || entry.geoLocCountry;
+              allCountryCounts[countryName] = (allCountryCounts[countryName] || 0) + entry.count;
+              allMappedSequences += entry.count;
+            }
+          });
+
+          // Process INSDC data for subtraction
+          const insdcCountryCounts = {};
+          insdcData.data.forEach((entry) => {
+            if (entry.geoLocCountry) {
+              const countryName = countryNameMapping[entry.geoLocCountry] || entry.geoLocCountry;
+              insdcCountryCounts[countryName] = (insdcCountryCounts[countryName] || 0) + entry.count;
+            }
+          });
+
+          // Calculate direct submissions
+          const directCountryCounts = {};
+          let directTotalSequences = 0;
+          let directMappedSequences = 0;
+          
+          Object.keys(allCountryCounts).forEach((country) => {
+            const directCount = allCountryCounts[country] - (insdcCountryCounts[country] || 0);
+            if (directCount > 0) {
+              directCountryCounts[country] = directCount;
+              directMappedSequences += directCount;
+            }
+          });
+          
+          const allTotal = allData.data.reduce((sum, entry) => sum + entry.count, 0);
+          const insdcTotal = insdcData.data.reduce((sum, entry) => sum + entry.count, 0);
+          directTotalSequences = allTotal - insdcTotal;
+
+          function createMapData(countryCounts, colorscale = "Plasma") {
+            if (Object.keys(countryCounts).length === 0) {
+              return null;
+            }
+
+            const rawVals = Object.values(countryCounts);
+            const logVals = rawVals.map((v) => Math.log10(v || 1));
+            const logMax = Math.ceil(Math.max(...logVals));
+            const tickvals = Array.from({ length: logMax + 1 }, (_, i) => i);
+            const ticktext = tickvals.map((v) => (10 ** v).toLocaleString());
+
+            return [{
+              type: "choropleth",
+              locations: Object.keys(countryCounts),
+              z: logVals,
+              locationmode: "country names",
+              colorscale: colorscale,
+              colorbar: {
+                title: { 
+                  text: "Sequence Count", 
+                  font: { size: 12 },
+                  side: "right"
+                },
+                tickvals,
+                ticktext,
+                thickness: 15,
+                len: 0.7,
+                titleside: "right",
+                title_standoff: 15,
+              },
+              text: Object.keys(countryCounts).map(
+                (c) => `${c}: ${countryCounts[c].toLocaleString()}`
+              ),
+              hovertemplate:
+                "<b>%{text}</b><br>Sequences: %{customdata}<extra></extra>",
+              customdata: rawVals,
+              zmin: 0,
+              zmax: logMax,
+            }];
+          }
+
+          function updateMap(showDirect = false) {
+            const countryCounts = showDirect ? directCountryCounts : allCountryCounts;
+            const totalSequences = showDirect ? directTotalSequences : allTotalSequences;
+            const mappedSequences = showDirect ? directMappedSequences : allMappedSequences;
+            const unmappedSequences = totalSequences - mappedSequences;
+            const title = showDirect ? `Direct Submissions: ${pathogen.displayName}` : `All Data: ${pathogen.displayName} Sequences`;
+            const colorscale = showDirect ? "Oranges" : "Plasma";
+            const prefix = showDirect ? "Direct" : "All";
+
+            const mapData = createMapData(countryCounts, colorscale);
+            
+            if (!mapData) {
+              chartDiv.innerHTML = `<div style="text-align: center; padding: 2rem; color: #666;">No ${showDirect ? 'direct submissions' : 'data'} with geographic data available for ${pathogen.displayName}.</div>`;
+              return;
+            }
+
+            const layout = {
+              title: {
+                text: title,
+                font: { size: 14, color: "#333" },
+                x: 0.5,
+                xanchor: "center",
+              },
+              geo: {
+                projection: { type: "natural earth" },
+                showframe: false,
+                showcoastlines: true,
+                coastlinecolor: "RebeccaPurple",
+                showland: true,
+                landcolor: "rgb(243, 243, 243)",
+                showocean: true,
+                oceancolor: "rgb(204, 230, 255)",
+              },
+              margin: { t: 60, b: 80, l: 20, r: 30 },
+              annotations: [
+                {
+                  text: `${prefix}: ${totalSequences.toLocaleString()} | Mapped: ${mappedSequences.toLocaleString()} | Unmapped: ${unmappedSequences.toLocaleString()}`,
+                  showarrow: false,
+                  xref: "paper",
+                  yref: "paper",
+                  x: 0.5,
+                  y: -0.08,
+                  xanchor: "center",
+                  yanchor: "top",
+                  font: { size: 11, color: "#666" },
+                },
+              ],
+            };
+
+            Plotly.newPlot(chartDivId, mapData, layout, { 
+              responsive: true,
+              displayModeBar: false,
+              staticPlot: false
+            });
+          }
+
+          // Initialize with all data
+          updateMap(false);
+
+          // Add event listeners
+          allDataBtn.addEventListener("click", () => {
+            allDataBtn.classList.add("active");
+            directBtn.classList.remove("active");
+            updateMap(false);
+          });
+
+          directBtn.addEventListener("click", () => {
+            directBtn.classList.add("active");
+            allDataBtn.classList.remove("active");
+            updateMap(true);
+          });
+
+        } catch (error) {
+          console.error(
+            `Error fetching/rendering toggleable maps for ${pathogen.displayName}:`,
+            error
+          );
+          chartDiv.innerHTML = `<div style="color:red; text-align: center; padding: 2rem;">Failed to load maps for ${pathogen.displayName}.</div>`;
+        }
+      }
+
       async function createMonthlyCountsChart(pathogen, parentDiv) {
         const chartDivId = `monthlycounts-${pathogen.endpoint}`;
         const chartDiv = document.createElement("div");
@@ -647,12 +911,17 @@
           chartsRowDiv.className = "chart-container";
           pathogenSection.appendChild(chartsRowDiv);
 
+          // Create maps container
+          const mapsContainer = document.createElement("div");
+          mapsContainer.className = "maps-container";
+          pathogenSection.appendChild(mapsContainer);
+
           dashboardContainer.appendChild(pathogenSection);
 
           const chartPromises = [
             createMonthlyCountsChart(pathogen, chartsRowDiv),
             createSourceTypeSunburst(pathogen, chartsRowDiv),
-            createGeoMap(pathogen, pathogenSection),
+            createToggleableMaps(pathogen, mapsContainer),
           ];
 
           try {
